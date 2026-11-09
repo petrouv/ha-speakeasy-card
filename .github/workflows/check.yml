@@ -1,0 +1,21 @@
+name: Check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  bundle:
+    name: Bundle is up to date and valid
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # also syntax-checks the bundle with node and verifies vendor/ checksums
+      - name: Verify speakeasy-card.js matches src/ and vendor/
+        run: python3 scripts/build.py --check

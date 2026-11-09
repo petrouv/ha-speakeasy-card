@@ -1,0 +1,16 @@
+{
+  "digital-ptz.js": {
+    "repo": "AlexxIT/WebRTC",
+    "commit": "54145d5d1f4f8175659c04ffd9936c5004d58ad7",
+    "path": "custom_components/webrtc/www/digital-ptz.js",
+    "license": "MIT",
+    "sha256": "0a80c41c58b1796fc3f1423cb78a1fa991dea95da66a7017c588ddaba7eccc59"
+  },
+  "video-rtc.js": {
+    "repo": "AlexxIT/go2rtc",
+    "commit": "7c05066c90ab6ad1fccb506d5f0408aa31ebe60f",
+    "path": "www/video-rtc.js",
+    "license": "MIT",
+    "sha256": "d48ce627baf7c341a92c0f5844a3c546431f9db873ff21489671aba2ecfe64fb"
+  }
+}

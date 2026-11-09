@@ -1,0 +1,32 @@
+Speakeasy includes code from the following projects, both under the MIT License.
+
+go2rtc — vendor/video-rtc.js
+https://github.com/AlexxIT/go2rtc
+Copyright (c) 2022 Alexey Khit
+
+WebRTC Camera — vendor/digital-ptz.js, and the card is based on its webrtc-camera card
+https://github.com/AlexxIT/WebRTC
+Copyright (c) 2023 Alexey Khit
+
+digital-ptz.js is a build of pan-zoom-controller by dbuezas
+(https://github.com/dbuezas/pan-zoom-controller), taken as distributed with WebRTC Camera.
+
+MIT License text for the projects above:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
