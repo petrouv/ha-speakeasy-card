@@ -2,12 +2,12 @@
  * Speakeasy - doorbell, intercom and camera card for Home Assistant.
  *
  * Based on WebRTC Camera by AlexxIT (https://github.com/AlexxIT/WebRTC, MIT).
- * Layout needs CSS container queries: Chrome 105+, Safari 16+, Firefox 110+.
+ * Layout needs CSS container queries and color-mix(): Chrome 111+, Safari 16.2+, Firefox 113+.
  */
 import {VideoRTCExt} from './video-rtc-ext.js';
 import {DigitalPTZ} from '../vendor/digital-ptz.js';
 
-const VERSION = '0.1.0';
+const VERSION = '0.2.0';
 
 /**
  * UI strings. English is the fallback; the language follows the Home Assistant
@@ -27,6 +27,7 @@ const STRINGS = {
         info: 'Stream info',
         pip: 'Picture-in-picture',
         fullscreen: 'Fullscreen',
+        more: 'More',
         statsHint: 'Stream stats (tap to hide)',
         noData: 'No data',
         micNoHttps: 'Microphone unavailable: browsers allow microphone access only over HTTPS.',
@@ -49,6 +50,34 @@ const STRINGS = {
         ptz_zoom_in: 'Zoom in',
         ptz_zoom_out: 'Zoom out',
         ptz_home: 'Home',
+        record: 'Record',
+        recordStop: 'Stop recording',
+        recordStarting: 'Starting recording…',
+        recordSaving: 'Saving the recording…',
+        recordStartLost: 'Connection lost while starting. If the recording started, the card shows it once reconnected',
+        recordStartOffline: 'Recording not started: no connection to Home Assistant; try again',
+        recordStopLost: 'Connection lost while saving. If the file is saved, it will be in Media',
+        recordStopOffline: 'Recording not stopped: no connection to Home Assistant; try again',
+        recordSaved: 'Recording saved: ',
+        recordWhere: 'Find it in Media → ',
+        recordOpen: 'Open',
+        recordFailed: 'Recording failed: ',
+        recordNoData: 'Recording failed: the file could not be saved',
+        recordDataKept: 'Recording not saved yet: its data is kept, and saving is tried again when Home Assistant restarts or the integration reloads, if the recordings folder is unchanged',
+        recordNotLoaded: 'Recording is unavailable: the Speakeasy integration is not loaded right now, e.g. while Home Assistant starts or the integration reloads; try again shortly',
+        recordDiskLow: 'Recording is unavailable: not enough free disk space',
+        recordNoStream: 'Recording failed: go2rtc cannot open the stream. ',
+        recordCameraAsleep: 'Recording failed: the camera did not answer. It may be asleep or offline; try again',
+        recordStartStopped: 'Recording not started: it was stopped, or Home Assistant was stopping, before the camera sent data',
+        recordNoMediaDir: 'Recording is unavailable: Home Assistant has no local media folder',
+        recordFolderNotWritable: 'Recording failed: cannot write to the recordings folder. ',
+        recordEnded_disk_low: 'Recording stopped: not enough free disk space',
+        recordEnded_stalled: 'Recording stopped: the camera stopped sending data',
+        recordEnded_stream_ended: 'Recording stopped: the stream ended',
+        recordEnded_error: 'Recording stopped because of an error',
+        recordEnded_shutdown: 'Recording stopped: Home Assistant stopped or restarted, or the Speakeasy integration was reloaded, disabled or removed',
+        recordEndedUnseen: 'The recording ended while the connection was down. If it was saved, the file is in Media',
+        recordAlreadyEnded: 'The recording had already ended. If it was saved, the file is in Media',
     },
     ru: {
         talk: 'Говорить',
@@ -63,6 +92,7 @@ const STRINGS = {
         info: 'Информация о потоке',
         pip: 'Картинка в картинке',
         fullscreen: 'Полный экран',
+        more: 'Ещё',
         statsHint: 'Статистика потока (нажмите, чтобы скрыть)',
         noData: 'Нет данных',
         micNoHttps: 'Микрофон недоступен: браузер разрешает доступ к микрофону только по HTTPS.',
@@ -85,6 +115,34 @@ const STRINGS = {
         ptz_zoom_in: 'Приблизить',
         ptz_zoom_out: 'Отдалить',
         ptz_home: 'Домой',
+        record: 'Запись',
+        recordStop: 'Остановить запись',
+        recordStarting: 'Запуск записи…',
+        recordSaving: 'Сохранение записи…',
+        recordStartLost: 'Связь прервалась во время запуска. Если запись началась, карточка покажет её после переподключения',
+        recordStartOffline: 'Запись не начата: нет связи с Home Assistant; попробуйте ещё раз',
+        recordStopLost: 'Связь прервалась во время сохранения. Если файл сохранится, он будет в Медиа',
+        recordStopOffline: 'Запись не остановлена: нет связи с Home Assistant; попробуйте ещё раз',
+        recordSaved: 'Запись сохранена: ',
+        recordWhere: 'Файл в Медиа → ',
+        recordOpen: 'Открыть',
+        recordFailed: 'Не удалось записать: ',
+        recordNoData: 'Не удалось записать: файл не сохранился',
+        recordDataKept: 'Запись пока не сохранена: данные остались, сохранение повторится при перезапуске Home Assistant или перезагрузке интеграции, если папка записей не изменится',
+        recordNotLoaded: 'Запись недоступна: интеграция Speakeasy сейчас не загружена, например пока Home Assistant запускается или интеграция перезагружается; попробуйте ещё раз чуть позже',
+        recordDiskLow: 'Запись недоступна: мало свободного места на диске',
+        recordNoStream: 'Не удалось записать: go2rtc не открывает поток. ',
+        recordCameraAsleep: 'Не удалось записать: камера не ответила. Возможно, она спит или недоступна; попробуйте ещё раз',
+        recordStartStopped: 'Запись не начата: её остановили или Home Assistant останавливался до того, как камера прислала данные',
+        recordNoMediaDir: 'Запись недоступна: в Home Assistant нет локальной папки «Медиа»',
+        recordFolderNotWritable: 'Не удалось записать: нет доступа на запись в папку записей. ',
+        recordEnded_disk_low: 'Запись остановлена: мало свободного места на диске',
+        recordEnded_stalled: 'Запись остановлена: камера перестала присылать данные',
+        recordEnded_stream_ended: 'Запись остановлена: поток закончился',
+        recordEnded_error: 'Запись остановлена из-за ошибки',
+        recordEnded_shutdown: 'Запись остановлена: Home Assistant остановился или перезапустился, либо интеграцию Speakeasy перезагрузили, отключили или удалили',
+        recordEndedUnseen: 'Запись завершилась, пока не было связи. Если файл сохранился, он в Медиа',
+        recordAlreadyEnded: 'Запись уже завершилась. Если файл сохранился, он в Медиа',
     },
 };
 
@@ -132,7 +190,138 @@ const ACTION_SERVICES = {
     scene: ['scene', 'turn_on'],
 };
 
-const ALL_TOOLS = ['play', 'volume', 'reconnect', 'screenshot', 'info', 'pip', 'fullscreen'];
+const ALL_TOOLS = ['play', 'volume', 'reconnect', 'screenshot', 'record', 'info', 'pip', 'fullscreen'];
+
+/**
+ * Tools that move into the "more" menu when the bar is too narrow, least needed first.
+ * The camera panel toggle is left out on purpose: it opens talk, PTZ and presets, too much to
+ * hide behind "more", so it always stays in the row (and "more" itself is never a candidate).
+ */
+const OVERFLOW_ORDER = ['info', 'pip', 'reconnect', 'screenshot', 'play', 'volume', 'record', 'fullscreen'];
+
+/** Control bar geometry the layout is computed from; the CSS below is built from these values. */
+const BAR = {button: 40, toolGap: 2, groupGap: 8, primaryGap: 10};
+
+/** Version of the Speakeasy integration protocol the card speaks (`speakeasy/info`). */
+const RECORD_PROTOCOL = 1;
+
+/** Toolbar look of the record button per state: icon and label key. */
+const RECORD_STATES = {
+    idle: ['mdi:record-circle-outline', 'record'],
+    starting: ['mdi:record-circle-outline', 'recordStarting'],
+    recording: ['mdi:record', 'recordStop'],
+    saving: ['mdi:content-save-outline', 'recordSaving'],
+};
+
+/**
+ * Reasons a recording ends without a Stop that the user should hear about. 'shutdown' (HA stopping,
+ * the entry unloading) too: on a reload nothing else on the page says why the recording ended.
+ */
+const RECORD_END_REASONS = ['disk_low', 'stalled', 'stream_ended', 'error', 'shutdown'];
+
+/**
+ * Stop errors that tell how the recording ended, as notices. Already over, and Stop may have beaten
+ * the reconnect `list`, which then no longer tells about it: not_found, stopped elsewhere or ended
+ * while the card was offline; unknown_command, a restarted HA has not loaded the integration (yet);
+ * not_configured, no loaded entry, and an unload stops every recording. no_data and data_kept: the
+ * `failed` event, on this card or another of this source, has usually told it already.
+ */
+const STOP_ERROR_NOTICES = new Map([
+    ['not_found', 'recordAlreadyEnded'],
+    ['unknown_command', 'recordAlreadyEnded'],
+    ['not_configured', 'recordAlreadyEnded'],
+    ['no_data', 'recordNoData'],
+    ['data_kept', 'recordDataKept'],
+]);
+
+/** True for home-assistant-js-websocket's ERR_CONNECTION_LOST, bare or wrapped in an error result. */
+const isConnectionLost = err => err === 3 || !!(err && err.error && err.error.code === 3);
+
+/**
+ * Recordings whose ending this page has told, by id: one ending, one notice. Every card of a source
+ * hears the same event (HA would show the same toast once per card), and a stop's reply, an event
+ * and a reconnect `list` may each tell the same ending, in different words; the first wins. Only the
+ * latest RECORD_NOTICES_KEPT are kept, oldest out first: a page left open for months must not grow,
+ * and an ending is told within moments, long before that many newer ones come.
+ */
+const recordNoticesTold = new Set();
+const RECORD_NOTICES_KEPT = 200;
+
+/**
+ * Why recordings now saving ended, by id, held from the stopping a card of their source heard
+ * until their stopped or failed, so a save that fails gives one notice, not two. Per page, not per
+ * card: a card removed or re-added meanwhile (another view, a closed popup) must not lose it, so
+ * whichever card hears the outcome tells it, and a `list` without the recording tells it too.
+ * Held with the camera's name as that card calls it: {reason, name}.
+ */
+const recordEndsUntold = new Map();
+
+/** Cards following the recordings; when the last one stops, nothing would hear the held outcomes. */
+const recordFollowers = new Set();
+
+/** `speakeasy/info` per Home Assistant connection, so many cards make one call: {promise, failedFor}. */
+const recorderInfo = new WeakMap();
+
+/**
+ * Integration info if it supports recording (protocol RECORD_PROTOCOL, feature `record`),
+ * null otherwise. Not asked while the integration is not loaded (not installed, no enabled
+ * config entry yet, or a starting HA has not got to it); any error gives null too. Those two
+ * nulls are cached until a `recheck` call sees another config than the one they were asked
+ * with; any answer is cached until a reconnect drops the cache.
+ * @param {boolean} recheck pass true only with a fresh hass: an old one would undo a valid null
+ * @return {Promise<Object|null>}
+ */
+const getRecorderInfo = (hass, recheck) => {
+    const conn = hass.connection;
+    let cache = recorderInfo.get(conn);
+    if (!cache) {
+        cache = {promise: null, failedFor: null};
+        recorderInfo.set(conn, cache);
+        // The Connection outlives a Home Assistant restart, which may add or remove the integration.
+        // Added before any card's own 'ready' listener (initRecording), so cards re-ask after the drop.
+        conn.addEventListener('ready', () => { cache.promise = null; });
+    }
+    // The frontend gets a new config object when an integration loads (also for a config entry
+    // added while the page is open) and, right after a reconnect, when its get_config returns:
+    // until then it passes the old config. Config changes are rare, so this does not flood HA.
+    if (recheck && cache.failedFor && cache.failedFor !== hass.config) cache.promise = null;
+    if (!cache.promise) {
+        const config = hass.config;
+        cache.failedFor = null;
+        if (!config.components.includes('speakeasy')) {
+            cache.failedFor = config;
+            cache.promise = Promise.resolve(null);
+        } else {
+            const asked = cache.promise = hass.callWS({type: 'speakeasy/info'}).then(
+                info => info && info.protocol === RECORD_PROTOCOL
+                    && (info.features || []).includes('record') ? info : null,
+                () => {
+                    if (cache.promise === asked) cache.failedFor = config;
+                    return null;
+                },
+            );
+        }
+    }
+    return cache.promise;
+};
+
+/** Seconds as m:ss, or h:mm:ss from an hour on. */
+const formatDuration = seconds => {
+    const s = Math.max(0, Math.floor(seconds));
+    const mmss = String(Math.floor(s / 60) % 60).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    return s >= 3600 ? Math.floor(s / 3600) + ':' + mmss : mmss;
+};
+
+/** Media folder of a `media-source://media_source/<dir>/<path>` id, for "Media → folder" hints. */
+const mediaFolder = mediaContentId => {
+    const parts = mediaContentId.replace(/^media-source:\/\/media_source\/[^/]+\/?/, '').split('/');
+    parts.pop();
+    return parts.join('/');
+};
+
+/** True inside the Home Assistant companion app, where `<a download>` may do nothing. */
+const inCompanionApp = () => !!(window.externalApp
+    || (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.externalBus));
 
 /** PTZ buttons of the camera bar, in display order: [config path, icon]. */
 const PTZ_BAR_BUTTONS = [
@@ -164,6 +353,30 @@ class SpeakeasyCard extends VideoRTCExt {
         this._statsInterval = 0;
         /** @type {DigitalPTZ} */
         this._digitalPTZ = null;
+        /** [internal] `speakeasy/info` result: undefined while asking, null when recording is unavailable. */
+        this._recordInfo = undefined;
+        /** [internal] the getRecorderInfo() promise asked last; _recordInfo is its answer once set. */
+        this._recordInfoAsked = null;
+        /** [internal] true when `set hass` came while initRecording could not ask; connectedCallback rechecks. */
+        this._recheckPending = false;
+        /** [internal] recordings of every source, by id, from `speakeasy/record/subscribe`. */
+        this._recordings = new Map();
+        /**
+         * [internal] promise of the unsubscribe function (resolving to null if subscribing failed), set
+         * from the subscribe request until dropSubscription(), so initRecording does not subscribe twice.
+         */
+        this._recordUnsub = null;
+        /** [internal] a config entry is loaded, so a recording can start: from `info`, then every `list`. */
+        this._recordConfigured = false;
+        /** [internal] connection whose 'ready' calls onReconnect, from the first subscribe until the card is removed. */
+        this._readyConn = null;
+        this.onReconnect = this.onReconnect.bind(this);
+        /** [internal] 'starting' or 'stopping' while this card waits for the integration. */
+        this._recordBusy = null;
+        /** [internal] recording timer id. */
+        this._recordTimer = 0;
+        /** [internal] delayed unsubscribeRecordings() after the card left the DOM. */
+        this._unsubTimer = 0;
     }
 
     /**
@@ -210,6 +423,9 @@ class SpeakeasyCard extends VideoRTCExt {
         if (config.preset !== undefined && typeof config.preset !== 'string') {
             throw new Error('`preset` must be a select entity id');
         }
+        if (config.record_url !== undefined && typeof config.record_url !== 'string') {
+            throw new Error('`record_url` must be a go2rtc source');
+        }
 
         if (config.background) this.background = config.background;
 
@@ -242,6 +458,7 @@ class SpeakeasyCard extends VideoRTCExt {
          *     background: boolean,
          *
          *     server: string,
+         *     record_url: string,
          *
          *     digital_ptz:{
          *         mouse_drag_pan: boolean,
@@ -287,6 +504,32 @@ class SpeakeasyCard extends VideoRTCExt {
         if (this.lang !== lang) this.applyLabels();
         this.updateCameraBar();
         this.updateIndicators();
+        this.initRecording(true);
+    }
+
+    connectedCallback() {
+        clearTimeout(this._unsubTimer);
+        super.connectedCallback();
+        // a recheck only for a hass set while detached (hui-card sets it before appending): a cached
+        // view comes back with its old hass, the fresh one follows
+        this.initRecording(this._recheckPending);
+        this._recheckPending = false;
+        // re-arm the recording timer: updateRecordButton() does not start it while the card is detached
+        this.updateRecordButton();
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        if (this.shadowRoot) this.closeMoreMenu();
+        // VideoRTC also calls this on a hidden tab or a card scrolled out of view: keep following
+        if (this.isConnected) return;
+        // and a re-parented card (masonry columns) comes back soon: keep the subscription and the tray.
+        // Not via onsuspend(): VideoRTCExt never suspends a `background` card, yet a removed one
+        // must stop following, or its leftover copy would toast every recording event.
+        clearTimeout(this._unsubTimer);
+        this._unsubTimer = setTimeout(() => {
+            if (!this.isConnected) this.unsubscribeRecordings();
+        }, this.DISCONNECT_TIMEOUT);
     }
 
     /** UI language code with a STRINGS entry, 'en' otherwise. */
@@ -393,8 +636,16 @@ class SpeakeasyCard extends VideoRTCExt {
      */
     notify(message) {
         console.warn('speakeasy-card:', message);
-        this.dispatchEvent(new CustomEvent('hass-notification', {
-            detail: {message},
+        this.toast({message});
+    }
+
+    /** Show an HA toast; `hass-notification` is handled on `home-assistant`. */
+    toast(detail) {
+        // a card detached meanwhile (e.g. the user switched views during an await) is not
+        // under `home-assistant`, so its event would reach no one
+        const target = this.isConnected ? this : (document.querySelector('home-assistant') || this);
+        target.dispatchEvent(new CustomEvent('hass-notification', {
+            detail,
             bubbles: true,
             composed: true,
         }));
@@ -545,7 +796,7 @@ class SpeakeasyCard extends VideoRTCExt {
                 case 'hls':
                 case 'mp4':
                 case 'mjpeg':
-                    this.setStatus(msg.type.toUpperCase(), this.config.title || '');
+                    this.setStatus(msg.type.toUpperCase(), this.loc(this.config.title));
                     break;
             }
         };
@@ -557,7 +808,7 @@ class SpeakeasyCard extends VideoRTCExt {
         super.onpcvideo(ev);
 
         if (this.pcState !== WebSocket.CLOSED) {
-            this.setStatus('RTC', this.config.title || '');
+            this.setStatus('RTC', this.loc(this.config.title));
         }
     }
 
@@ -565,9 +816,22 @@ class SpeakeasyCard extends VideoRTCExt {
         const shadow = this.attachShadow({mode: 'open'});
         shadow.innerHTML = `
         <style>
+            :host {
+                display: flex;
+                flex-direction: column;
+                /* pinned to a fixed-height slot (Sections rows); height stays auto, so a stack still
+                   stretches it: a % height would block that, a % min/max is ignored when indefinite */
+                min-height: 100%;
+                max-height: 100%;
+            }
             ha-card {
                 width: 100%;
                 height: 100%;
+                box-sizing: border-box; /* the border stays inside, so the card is exactly as wide as the tray */
+                /* in a fixed-height slot the card, and the player in it, give way to the open tray */
+                flex: 1 1 auto;
+                min-height: 0;
+                z-index: 1; /* over the status tray that slides out from under it */
                 margin: auto;
                 overflow: hidden;
                 position: relative;
@@ -584,7 +848,8 @@ class SpeakeasyCard extends VideoRTCExt {
             .player {
                 background-color: black;
                 width: 100%;
-                flex: none;
+                flex: 0 1 auto;
+                min-height: 0;
                 aspect-ratio: var(--aic-aspect-ratio, 16 / 9); /* reserve height before the video loads */
                 position: relative; /* important for Safari */
                 overflow: hidden;
@@ -672,6 +937,9 @@ class SpeakeasyCard extends VideoRTCExt {
                 background: black;
             }
             :host(:fullscreen) ha-card, :fullscreen ha-card {
+                /* repeats flex/min-height at (0,2,1): a config ha-card rule, inserted later, cannot override these two in fullscreen */
+                flex: 1 1 auto;
+                min-height: 0;
                 border-radius: 0;
                 background: black;
             }
@@ -940,7 +1208,12 @@ class SpeakeasyCard extends VideoRTCExt {
                     cursor: pointer;
                     -webkit-tap-highlight-color: transparent;
                 }
-                .panel button:focus-visible, .panel select:focus-visible, .chip:has(select:focus-visible) {
+                .panel button:focus-visible, .panel select:focus-visible {
+                    outline: 2px solid var(--aic-accent);
+                    outline-offset: 2px;
+                }
+                /* apart: Firefox before 121 has no :has() and would drop the whole selector list */
+                .chip:has(select:focus-visible) {
                     outline: 2px solid var(--aic-accent);
                     outline-offset: 2px;
                 }
@@ -1195,11 +1468,15 @@ class SpeakeasyCard extends VideoRTCExt {
         this.updateCameraBar();
     }
 
-    /** Event badges over the video (motion, person, doorbell): shown only while active. */
+    /**
+     * Event badges (motion, person, doorbell), shown only while active: in the status tray under the
+     * card, so they never cover the picture; over the video when the control bar is off.
+     */
     renderIndicators() {
         this._indicators = (this.config.indicators || []).map(item => typeof item === 'string' ? {entity: item} : item);
         if (!this._indicators.length) return;
-        this.querySelector('.status').insertAdjacentHTML('afterend', `<div class="indicators" role="status">${
+        const statusBody = this.querySelector('.status-bar-body');
+        (statusBody || this.querySelector('.status')).insertAdjacentHTML(statusBody ? 'afterbegin' : 'afterend', `<div class="indicators" role="status">${
             this._indicators.map((item, index) => `
                 <span class="indicator" data-indicator="${index}"${item.color ? ` style="--aic-indicator: ${escapeHTML(item.color)}"` : ''} hidden>
                     <ha-icon icon="${escapeHTML(item.icon || 'mdi:alert-circle-outline')}"></ha-icon><span class="label"></span>
@@ -1231,6 +1508,7 @@ class SpeakeasyCard extends VideoRTCExt {
             badge.querySelector('.label').textContent =
                 this.loc(item.name) || (state && state.attributes.friendly_name) || item.entity;
         });
+        this.updateStatusBar();
         clearTimeout(this._indicatorTimer);
         if (nextExpiry < Infinity) {
             this._indicatorTimer = setTimeout(() => this.updateIndicators(), nextExpiry - now + 50);
@@ -1322,23 +1600,422 @@ class SpeakeasyCard extends VideoRTCExt {
         a.click();
     }
 
+    /**
+     * Ask the integration, then follow the recordings while the card is on the page.
+     * @param {boolean} recheck true only with a fresh hass: from `set hass`, or from connectedCallback
+     *     when one came while the card was detached; see getRecorderInfo()
+     */
+    initRecording(recheck = false) {
+        if (this._recordUnsub) return;
+        if (!this._hass || !this.isConnected || !this._tools || !this._tools.includes('record')) {
+            // a fresh hass on a detached card: connectedCallback rechecks
+            if (recheck) this._recheckPending = true;
+            return;
+        }
+        // cached per connection; a new promise means the answer was dropped and is asked again
+        const asked = getRecorderInfo(this._hass, recheck);
+        if (asked !== this._recordInfoAsked) {
+            this._recordInfoAsked = asked;
+            // the old answer must not let the next call subscribe before this one is in
+            this._recordInfo = undefined;
+            asked.then(info => {
+                if (this._recordInfoAsked !== asked) return;
+                this._recordInfo = info;
+                this._recordConfigured = !!(info && info.configured);
+                // An answer subscribes; the `list` that follows (or the subscribe catch) shows the
+                // recordings. A null one keeps them, hidden: the `list` after the next answer (a
+                // recheck or 'ready', not re-asked here) replaces them and tells what ended meanwhile.
+                if (info) this.initRecording();
+                else this.updateRecordButton();
+            });
+            return;
+        }
+        if (!this._recordInfo) return;
+        const conn = this._hass.connection;
+        // HA-js would resubscribe by itself on a reconnect, before 'ready', and silently drop a
+        // resubscribe that fails (unknown_command while a restarted HA is still starting): the
+        // card does it on 'ready' instead, after getRecorderInfo's listener (added on its first call).
+        if (this._readyConn !== conn) {
+            if (this._readyConn) this._readyConn.removeEventListener('ready', this.onReconnect);
+            conn.addEventListener('ready', this.onReconnect);
+            this._readyConn = conn;
+        }
+        recordFollowers.add(this);
+        const pending = conn.subscribeMessage(
+            event => this.onRecordEvent(event), {type: 'speakeasy/record/subscribe'}, {resubscribe: false},
+        ).then(unsub => {
+            // HA dropped it with its socket. HA-js before 9.8 would still send the unsubscribe on
+            // the next socket, where ids start over, and end whichever subscription took this id.
+            const socket = conn.socket;
+            return () => conn.socket === socket && unsub();
+        }).catch(err => {
+            // Only HA itself refuses it: the connection is lost, and 'ready' subscribes again, or
+            // the integration is not loaded, which needs a restart, so again 'ready'. Left pending
+            // till then, so a `set hass` does not subscribe again.
+            console.debug('speakeasy-card: no recording updates:', err);
+            // kept over a reconnect for the next `list`, which tells what ended meanwhile;
+            // otherwise no `list` will come and they may be over
+            if (this._recordUnsub === pending && !isConnectionLost(err)) {
+                this._recordings = new Map();
+                this.updateRecordButton();
+            }
+            return null;
+        });
+        this._recordUnsub = pending;
+    }
+
+    /** Drop the subscription; one still being set up is unsubscribed once it is in. */
+    dropSubscription() {
+        const unsub = this._recordUnsub;
+        this._recordUnsub = null;
+        if (unsub) unsub.then(fn => fn && fn()).catch(() => {});
+    }
+
+    /** The card was removed: stop following the recordings. */
+    unsubscribeRecordings() {
+        this.dropSubscription();
+        this._recordings = new Map();
+        // the page heard these endings, and no card is left to hear how their saves end
+        if (recordFollowers.delete(this) && !recordFollowers.size) {
+            for (const [id, {reason, name}] of recordEndsUntold) this.tellRecordEnded(id, reason, name);
+        }
+        this.updateRecordButton();
+        // not from onReconnect: removing a listener while 'ready' fires skips the next one
+        if (this._readyConn) this._readyConn.removeEventListener('ready', this.onReconnect);
+        this._readyConn = null;
+    }
+
+    /**
+     * The connection is back: HA has dropped the subscription with the old socket, and a restart
+     * may have added or removed the integration, so ask again (the cached answer is already
+     * dropped) and subscribe again. The recordings stay on show until the new `list` replaces
+     * them, so the button and the tray do not flicker; a null answer hides them.
+     */
+    onReconnect() {
+        this.dropSubscription();
+        this.initRecording();
+    }
+
+    /** What this card records: always the first (HD) stream, or `record_url` over it. */
+    get recordSource() {
+        const stream = this.config.streams[0];
+        // trimmed, as the integration keeps them: the card finds its recording by the same `url`
+        const source = stream.entity ? {entity: stream.entity} : {url: String(stream.url).trim()};
+        if (this.config.server) source.server = this.config.server;
+        const recordUrl = (this.config.record_url || '').trim();
+        if (recordUrl) source.record_url = recordUrl;
+        return source;
+    }
+
+    /**
+     * Whether a recording, from whichever device, is of this card's source. Compared as the
+     * integration keys a source: the entity id lowercased (it echoes it so, the start reply's
+     * fallback entry keeps ours as written), url exact, server trimmed of space and '/'.
+     */
+    isOwnRecording(recording) {
+        const own = this.recordSource;
+        const source = recording.source || {};
+        const entity = value => (value || '').toLowerCase();
+        const server = value => (value || '').trim().replace(/\/+$/, '');
+        return (source.url || '') === (own.url || '') && entity(source.entity) === entity(own.entity)
+            && server(source.server) === server(own.server);
+    }
+
+    /**
+     * This card's recording: the running one, else the first one still saving. One source can have
+     * a new recording running while older ones are still being saved.
+     */
+    findRecording() {
+        let saving = null;
+        for (const recording of this._recordings.values()) {
+            if (!this.isOwnRecording(recording)) continue;
+            if (recording.status === 'recording') return recording;
+            saving = saving || recording;
+        }
+        return saving;
+    }
+
+    /**
+     * @param {{event: string, configured: boolean, recordings: Array, recording: Object, reason: string,
+     *     kept: boolean, result: Object}} event
+     */
+    onRecordEvent(event) {
+        switch (event.event) {
+            case 'list': {
+                // While subscribed, a recording turns saving in a `list` only after its stopping, and
+                // leaves it only after its stopped/failed. One of ours that was running and is now
+                // saving or gone ended while there was no subscription (e.g. the connection was
+                // down). Still saving, it carries why, held for its outcome as its missed stopping
+                // would have been, even while our stop waits: our own stop would give 'user'. Gone,
+                // the reason is unknown, and a pending stop answers for it. A saving one was heard of.
+                const old = this.findRecording();
+                this._recordings = new Map(event.recordings.map(recording => [recording.id, recording]));
+                this._recordConfigured = !!event.configured;
+                // its stopped/failed was missed: the reason still holds, whatever the outcome
+                for (const [id, {reason, name}] of recordEndsUntold) {
+                    if (!this._recordings.has(id)) this.tellRecordEnded(id, reason, name);
+                }
+                const now = old && this._recordings.get(old.id);
+                if (old && old.status === 'recording') {
+                    if (!now) {
+                        if (this._recordBusy !== 'stopping') {
+                            this.notifyRecording(old.id, this.recordingName(old), 'recordEndedUnseen');
+                        }
+                    } else if (now.status === 'saving') this.holdRecordEnd(now, now.reason);
+                }
+                break;
+            }
+            case 'started':
+                this._recordings.set(event.recording.id, event.recording);
+                break;
+            case 'stopping':
+                this._recordings.set(event.recording.id, event.recording);
+                // told with its stopped or failed: a failed save tells only that
+                if (this.isOwnRecording(event.recording)) this.holdRecordEnd(event.recording, event.reason);
+                break;
+            case 'stopped': {
+                this._recordings.delete(event.recording.id);
+                // saved: why it ended, held since its stopping (by any card, the one that heard it may be gone)
+                const held = recordEndsUntold.get(event.recording.id);
+                if (held) this.tellRecordEnded(event.recording.id, held.reason, held.name);
+                break;
+            }
+            case 'failed': {
+                // Not saved: kept false, nothing was saved (the file could not be written, or was
+                // removed); kept true, the data stays as .part and the integration tries to save it
+                // at its next start (HA restart or reload), if its recordings folder is then still
+                // the one the part is in.
+                // Told instead of why it ended. Only one the card still shows is news, as is a held
+                // one (its card may be gone). Our own stop's no_data/data_kept reply is the same
+                // notice, deduped by notifyRecording.
+                const known = this._recordings.has(event.recording.id);
+                this._recordings.delete(event.recording.id);
+                const held = recordEndsUntold.get(event.recording.id);
+                recordEndsUntold.delete(event.recording.id);
+                if (held || (known && this.isOwnRecording(event.recording))) {
+                    const name = held ? held.name : this.recordingName(event.recording);
+                    this.notifyRecording(event.recording.id, name, event.kept === true ? 'recordDataKept' : 'recordNoData');
+                }
+                break;
+            }
+        }
+        this.updateRecordButton();
+    }
+
+    /**
+     * Tell, once per page, why a recording ended without a Stop (not 'user'), and drop it from
+     * recordEndsUntold. For ours, and for one held there by any card (its card may be gone).
+     */
+    tellRecordEnded(id, reason, name) {
+        recordEndsUntold.delete(id);
+        if (RECORD_END_REASONS.includes(reason)) this.notifyRecording(id, name, 'recordEnded_' + reason);
+    }
+
+    /**
+     * Hold why our recording ended till its save ends: see recordEndsUntold. Every card of the source
+     * hears it, so the name held is the first titled card's, or the integration's if none has a title.
+     */
+    holdRecordEnd(recording, reason) {
+        const held = recordEndsUntold.get(recording.id);
+        const title = this.recordingTitle(recording);
+        if (held && (held.titled || !title)) return;
+        recordEndsUntold.set(recording.id, {reason, name: title || recording.name || '', titled: !!title});
+    }
+
+    /** This card's title for its own recording, else ''. */
+    recordingTitle(recording) {
+        return (this.isOwnRecording(recording) && this.loc(this.config.title)) || '';
+    }
+
+    /**
+     * The camera a notice is about: this card's title for its own recording, else the name the
+     * integration gives (the entity's name, a go2rtc stream name, or a URL cut to scheme, host and port).
+     */
+    recordingName(recording) {
+        return this.recordingTitle(recording) || recording.name || '';
+    }
+
+    /**
+     * Show the notice about a recording's ending once per page, so a stop's reply or another card does
+     * not repeat it. Named, since several can end at once (e.g. HA restarting) and their toasts stack.
+     */
+    notifyRecording(id, name, key) {
+        if (recordNoticesTold.has(id)) return;
+        recordNoticesTold.add(id);
+        // a Set iterates in insertion order: the first is the oldest
+        if (recordNoticesTold.size > RECORD_NOTICES_KEPT) {
+            recordNoticesTold.delete(recordNoticesTold.values().next().value);
+        }
+        this.notify(name ? name + ' — ' + this.t(key) : this.t(key));
+    }
+
+    updateRecordButton() {
+        const button = this.querySelector('.controls .record'); // in the bar or in "more"
+        if (!button) return;
+        // no config entry: nothing to press; an unload's recordings still show till they end
+        button.hidden = !this._recordInfo || !this._recordConfigured;
+
+        const recording = this._recordInfo ? this.findRecording() : null;
+        let state = 'idle';
+        if (this._recordBusy === 'stopping' || (recording && recording.status === 'saving')) state = 'saving';
+        else if (recording) state = 'recording';
+        else if (this._recordBusy === 'starting') state = 'starting';
+
+        const [icon, label] = RECORD_STATES[state];
+        button.dataset.state = state;
+        button.disabled = state === 'starting' || state === 'saving';
+        button.querySelector('ha-icon').icon = icon;
+        if (button.dataset.i18n !== label) {
+            button.dataset.i18n = label;
+            button.title = this.t(label);
+            button.setAttribute('aria-label', button.title);
+        }
+
+        const badge = this.querySelector('.rec-badge');
+        const time = badge.querySelector('.rec-time');
+        const tick = () => {
+            time.textContent = formatDuration((Date.now() - Date.parse(recording.started_at)) / 1000);
+        };
+        clearInterval(this._recordTimer);
+        this._recordTimer = 0;
+        badge.hidden = state !== 'recording';
+        this.updateStatusBar();
+        if (state === 'recording') {
+            tick();
+            // a reply or an event may land on a detached card; connectedCallback re-arms it
+            if (this.isConnected) this._recordTimer = setInterval(tick, 1000);
+        }
+    }
+
+    async toggleRecording() {
+        if (this._recordBusy) return;
+        const recording = this.findRecording();
+        if (recording) {
+            if (recording.status === 'recording') await this.stopRecording(recording);
+            return;
+        }
+
+        this._recordBusy = 'starting';
+        this.updateRecordButton();
+        // as in stopRecording(): a closed socket fails the call the same way, without sending it
+        const connected = this.hass.connection.connected;
+        try {
+            const source = this.recordSource;
+            const started = await this.hass.callWS({type: 'speakeasy/record/start', source});
+            // normally the subscription has it already; this covers a missing subscription
+            if (!this._recordings.has(started.id)) {
+                this._recordings.set(started.id, {...started, source, status: 'recording'});
+            }
+        } catch (err) {
+            // lost after sending: it may have started, and the `list` after the reconnect shows it
+            if (isConnectionLost(err)) this.notify(this.t(connected ? 'recordStartLost' : 'recordStartOffline'));
+            else this.notify(this.recordError(err));
+        } finally {
+            this._recordBusy = null;
+            this.updateRecordButton();
+        }
+    }
+
+    async stopRecording(recording) {
+        this._recordBusy = 'stopping';
+        this.updateRecordButton();
+        let result = null;
+        let unsent = false;
+        // a closed socket fails the call with the same connection-lost error, without sending it
+        const connected = this.hass.connection.connected;
+        try {
+            // replies once the file is final
+            result = await this.hass.callWS({type: 'speakeasy/record/stop', recording_id: recording.id});
+        } catch (err) {
+            // Sent, it was probably delivered, and the integration finishes the file without us; the
+            // `list` after the reconnect brings the entry back while it is still saving.
+            if (isConnectionLost(err)) {
+                unsent = !connected;
+                this.notify(this.t(connected ? 'recordStopLost' : 'recordStopOffline'));
+            }
+            else if (err && STOP_ERROR_NOTICES.has(err.code)) {
+                this.notifyRecording(recording.id, this.recordingName(recording), STOP_ERROR_NOTICES.get(err.code));
+            } else if (err) this.notify(this.recordError(err));
+        } finally {
+            // not stopped, so the entry stays and Stop can be pressed again
+            if (!unsent) this._recordings.delete(recording.id);
+            this._recordBusy = null;
+            this.updateRecordButton();
+        }
+        // It may have ended by itself before Stop reached it, unseen: e.g. ended while the card was
+        // offline and Stop beat the reconnect `list`.
+        if (result) {
+            this.tellRecordEnded(result.id, result.reason, this.recordingName(recording));
+            await this.downloadRecording(result);
+        }
+    }
+
+    /** @param {{code: string, message: string}} err */
+    recordError(err) {
+        const code = err && err.code;
+        // Record is shown only while loaded and configured, so these are races: a start sent while
+        // a restarted HA has not loaded the integration yet (unknown_command), or whose checks span an
+        // unload, e.g. a reload (not_configured). A removed or failed entry hides the button anyway.
+        if (code === 'unknown_command' || code === 'not_configured') return this.t('recordNotLoaded');
+        if (code === 'disk_low') return this.t('recordDiskLow');
+        // the integration has already waited for the camera to wake up
+        if (code === 'camera_unavailable') return this.t('recordCameraAsleep');
+        // A stop ended the start before the first data: an action or HA stopping during its checks
+        // (the camera's stream source, the disk, the source's previous file still closing; an unload
+        // there gives not_configured, above), or an action, an unload or HA stopping while it waited
+        // for go2rtc's first data. Also a start asked while HA was stopping.
+        if (code === 'stopped') return this.t('recordStartStopped');
+        if (code === 'media_dir_missing') return this.t('recordNoMediaDir');
+        // without a detail the integration sends the code itself as the message
+        const detail = err && err.message && err.message !== code ? err.message : '';
+        if (code === 'stream_not_found' || code === 'go2rtc_error') return this.t('recordNoStream') + detail;
+        // the detail is the bare OS error, which does not say it is about the folder
+        if (code === 'folder_not_writable') return this.t('recordFolderNotWritable') + detail;
+        return this.t('recordFailed') + ((err && (err.message || err.code)) || String(err));
+    }
+
+    /**
+     * Save the finished file on this device, like saveScreenshot(). The companion app
+     * may ignore `<a download>`, so it gets a toast with a link instead.
+     * @param {{filename: string, media_content_id: string}} result
+     */
+    async downloadRecording(result) {
+        const folder = mediaFolder(result.media_content_id);
+        const saved = this.t('recordSaved') + result.filename + '. ' + this.t('recordWhere') + folder;
+        let url;
+        try {
+            const media = await this.hass.callWS({
+                type: 'media_source/resolve_media',
+                media_content_id: result.media_content_id,
+                expires: 3600,
+            });
+            url = this.hass.hassUrl(media.url);
+        } catch (err) {
+            console.warn('speakeasy-card: cannot resolve the recording:', err);
+            this.notify(saved);
+            return;
+        }
+
+        if (inCompanionApp()) {
+            this.toast({
+                message: saved,
+                duration: 15000,
+                action: {text: this.t('recordOpen'), action: () => window.open(url, '_blank')},
+            });
+            return;
+        }
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = result.filename;
+        a.click();
+    }
+
     renderCustomUI() {
         if (!this.config.ui) return;
 
         this.querySelector('ha-card').classList.add('ui-on');
         this.video.controls = false;
         this.video.style.pointerEvents = 'none';
-
-        /** Two-row layout of the control bar, scoped to `scope` (repeated per breakpoint). */
-        const compactCSS = scope => `
-            ${scope} { flex-wrap: wrap; gap: 8px; }
-            ${scope} .primary { flex: 1 1 100%; }
-            ${scope} .talk { flex: 1 1 auto; height: 40px; border-radius: 20px; }
-            ${scope} .segmented button { height: 40px; }
-            ${scope} .talk[hidden] + .segmented { flex: 1 1 auto; }
-            ${scope} .talk[hidden] + .segmented button { flex: 1 1 0; }
-            ${scope} .tools { flex: 1 1 100%; margin-left: 0; justify-content: space-between; }
-        `;
 
         const card = this.querySelector('.card');
         card.insertAdjacentHTML('beforebegin', `
@@ -1348,10 +2025,10 @@ class SpeakeasyCard extends VideoRTCExt {
                     --aic-fg: var(--primary-text-color, #212121);
                     --aic-muted: var(--secondary-text-color, #727272);
                     --aic-line: var(--divider-color, rgba(0, 0, 0, 0.12));
-                    --aic-fill: rgba(127, 127, 127, 0.14);
                     --aic-fill: color-mix(in srgb, var(--disabled-color, #bdbdbd) 22%, transparent);
                     --aic-fill-hover: color-mix(in srgb, var(--disabled-color, #bdbdbd) 34%, transparent);
                     --aic-thumb: var(--ha-card-background, var(--card-background-color, #fff));
+                    --aic-menu-bg: var(--ha-card-background, var(--card-background-color, #fff));
                     --aic-accent: var(--primary-color, #03a9f4);
                     --aic-accent-fill: color-mix(in srgb, var(--primary-color, #03a9f4) 16%, transparent);
                     --aic-green: var(--success-color, #43a047);
@@ -1369,6 +2046,7 @@ class SpeakeasyCard extends VideoRTCExt {
                     --aic-muted: rgba(255, 255, 255, 0.7);
                     --aic-line: rgba(255, 255, 255, 0.2);
                     --aic-thumb: #636366;
+                    --aic-menu-bg: #2c2c2e;
                 }
                 .spinner {
                     position: absolute;
@@ -1380,7 +2058,7 @@ class SpeakeasyCard extends VideoRTCExt {
                 .controls {
                     display: flex;
                     align-items: center;
-                    gap: 8px;
+                    gap: ${BAR.groupGap}px;
                     padding: 8px 8px 8px 12px;
                     color: var(--aic-fg);
                 }
@@ -1391,13 +2069,13 @@ class SpeakeasyCard extends VideoRTCExt {
                 .primary {
                     display: flex;
                     align-items: center;
-                    gap: 10px;
+                    gap: ${BAR.primaryGap}px;
                     min-width: 0;
                 }
                 .tools {
                     display: flex;
                     align-items: center;
-                    gap: 2px;
+                    gap: ${BAR.toolGap}px;
                     margin-left: auto;
                 }
                 .controls button {
@@ -1424,8 +2102,8 @@ class SpeakeasyCard extends VideoRTCExt {
                 }
                 /* toolbar: quiet icon buttons (ha-icon-button), a tint only on hover / when on */
                 .btn {
-                    width: 40px;
-                    height: 40px;
+                    width: ${BAR.button}px;
+                    height: ${BAR.button}px;
                     padding: 0;
                     border-radius: 50%;
                     background: transparent;
@@ -1467,6 +2145,17 @@ class SpeakeasyCard extends VideoRTCExt {
                     --mdc-icon-size: 20px;
                     pointer-events: none;
                 }
+                /* every label sits in one grid cell, so the button is as wide as the longest and never resizes */
+                .talk .label {
+                    display: grid;
+                }
+                .talk .label > span {
+                    grid-area: 1 / 1;
+                    text-align: center;
+                }
+                .talk .label > span:not(.current) {
+                    visibility: hidden;
+                }
                 .talk:hover {
                     background: color-mix(in srgb, var(--aic-green) 28%, transparent);
                 }
@@ -1481,6 +2170,113 @@ class SpeakeasyCard extends VideoRTCExt {
                 .talk.pending {
                     opacity: 0.6;
                     pointer-events: none;
+                }
+                /*
+                 * record: a red dot while recording, a pulsing disk while saving. The button keeps its
+                 * width in every state; the elapsed time is shown in the status tray under the card,
+                 * so the bar never reflows.
+                 */
+                .btn.record[data-state="recording"] {
+                    color: var(--aic-red) !important;
+                }
+                .btn.record[data-state="saving"] ha-icon {
+                    animation: aic-blink 1s ease-in-out infinite alternate;
+                }
+                .btn.record:disabled {
+                    cursor: default;
+                    opacity: 0.6;
+                }
+                /*
+                 * Status tray: event badges and the recording timer, off the picture. Not part of the
+                 * card: it slides out from under the card's bottom edge, its top tucked under the card's
+                 * rounded corners, its bottom rounded the same way, tinted by what is going on.
+                 */
+                .status-bar {
+                    --aic-tray-r: var(--ha-card-border-radius, var(--ha-border-radius-lg, 12px));
+                    --aic-tray-card: var(--ha-card-background, var(--card-background-color, #fff));
+                    --aic-tray-fg: var(--primary-text-color, #212121);
+                    display: grid;
+                    grid-template-rows: 0fr;
+                    margin-top: 0;
+                    border-radius: 0 0 var(--aic-tray-r) var(--aic-tray-r);
+                    background: color-mix(in srgb, var(--aic-tray, #db4437) 22%, var(--aic-tray-card));
+                    font-family: var(--ha-font-family-body, Roboto, sans-serif);
+                    -webkit-font-smoothing: antialiased;
+                    /* rows and margin move together, so the card + tray height only ever grows or shrinks */
+                    transition: grid-template-rows 0.3s var(--aic-ease, ease), margin-top 0.3s var(--aic-ease, ease),
+                        background 0.3s ease-in-out;
+                }
+                /* folded, the tint changes at once: updateStatusBar sets it before the tray opens */
+                .status-bar:not(.open) {
+                    transition-property: grid-template-rows, margin-top;
+                }
+                .status-bar.open {
+                    grid-template-rows: 1fr;
+                    margin-top: calc(-1 * var(--aic-tray-r));
+                }
+                /* under the black fullscreen bar: dark chips, and square like the card there */
+                :host(:fullscreen) .status-bar, :fullscreen .status-bar {
+                    --aic-tray-card: #2c2c2e;
+                    --aic-tray-fg: #fff;
+                    --aic-tray-r: 0px;
+                }
+                .status-bar-inner {
+                    overflow: hidden;
+                    min-height: 0;
+                }
+                .status-bar-body {
+                    display: flex;
+                    flex-wrap: wrap;
+                    align-items: center;
+                    gap: 6px;
+                    padding: calc(var(--aic-tray-r) + 6px) 10px 8px;
+                }
+                /*
+                 * repeats display/flex-wrap/gap at (0,2,0): a config .indicators rule, inserted
+                 * later and meant for the badges over the video, cannot override these three in the tray
+                 */
+                .status-bar .indicators {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 6px;
+                }
+                /* chips in the card colour on the tinted tray, text in their own colour */
+                .status-bar .indicator {
+                    height: 26px;
+                    box-sizing: border-box;
+                    padding: 0 10px 0 8px;
+                    gap: 5px;
+                    background: var(--aic-tray-card);
+                    color: color-mix(in srgb, var(--aic-indicator, #db4437) 78%, var(--aic-tray-fg));
+                    backdrop-filter: none;
+                    -webkit-backdrop-filter: none;
+                    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+                    font: 500 12px/16px var(--ha-font-family-body, Roboto, sans-serif);
+                    letter-spacing: 0.1px;
+                    animation: aic-chip-in 0.25s var(--aic-ease, ease);
+                }
+                .status-bar .indicator ha-icon {
+                    --mdc-icon-size: 16px;
+                }
+                .rec-badge {
+                    --aic-indicator: var(--error-color, #db4437);
+                    margin-left: auto;
+                    gap: 7px;
+                    padding-left: 10px;
+                    font-variant-numeric: tabular-nums;
+                }
+                .rec-dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background: var(--error-color, #db4437);
+                    animation: aic-blink 1s ease-in-out infinite alternate;
+                }
+                @keyframes aic-chip-in {
+                    from { opacity: 0; transform: scale(0.92); }
+                }
+                @keyframes aic-blink {
+                    50% { opacity: 0.35; }
                 }
                 @keyframes aic-pulse {
                     0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--aic-red) 45%, transparent); }
@@ -1517,24 +2313,69 @@ class SpeakeasyCard extends VideoRTCExt {
                     cursor: default;
                 }
                 /*
-                 * Narrow cards (phones, masonry columns): talk + quality on top, tools spread below,
-                 * so both rows span the full width.
-                 * The breakpoint depends on what the bar holds (classes set in updatePrimaryGroup),
-                 * so a single-stream camera without the quality switch keeps one row for longer.
+                 * Two rows when one does not fit (layoutControls measures it): talk + quality on top,
+                 * tools spread below, both rows full width.
                  */
-                @container (max-width: 499px) {
-                    ${compactCSS('.controls.has-talk.has-streams')}
+                .controls.compact { flex-wrap: wrap; }
+                .controls.compact .primary { flex: 1 1 100%; }
+                .controls.compact .talk { flex: 1 1 auto; height: 40px; border-radius: 20px; }
+                .controls.compact .segmented button { height: 40px; }
+                /* quality alone on its row: talk hidden, or moved into the panel (talk: panel) */
+                .controls.compact .talk[hidden] + .segmented,
+                .controls.compact .segmented:first-child { flex: 1 1 auto; }
+                .controls.compact .talk[hidden] + .segmented button,
+                .controls.compact .segmented:first-child button { flex: 1 1 0; }
+                .controls.compact .tools { flex: 1 1 100%; margin-left: 0; justify-content: space-between; }
+                /* "more": tools that do not fit even a row of their own; a popover, so the card cannot clip it */
+                .more-menu {
+                    position: fixed;
+                    inset: auto;
+                    margin: 0;
+                    padding: 6px;
+                    border: 0;
+                    border-radius: var(--aic-ctl-r);
+                    background: var(--aic-menu-bg);
+                    color: var(--aic-fg);
+                    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22), 0 1px 3px rgba(0, 0, 0, 0.12);
+                    flex-direction: column;
+                    gap: 2px;
+                    min-width: 180px;
+                    overflow-y: auto; /* scrolls when capped to the card (no Popover API) */
+                    font-family: var(--ha-font-family-body, Roboto, sans-serif);
+                    -webkit-font-smoothing: antialiased;
+                    z-index: 10;
                 }
-                @container (max-width: 399px) {
-                    ${compactCSS('.controls.has-talk')}
-                    ${compactCSS('.controls.has-streams')}
+                .more-menu:not(.open) {
+                    display: none;
                 }
-                @container (max-width: 329px) {
-                    ${compactCSS('.controls')}
+                .more-menu.open {
+                    display: flex;
+                    animation: aic-menu-in 0.16s var(--aic-ease);
+                }
+                .more-menu .btn {
+                    width: auto;
+                    min-width: 0;
+                    height: 40px;
+                    padding: 0 14px 0 10px;
+                    gap: 12px;
+                    border-radius: calc(var(--aic-ctl-r) - 4px);
+                    justify-content: flex-start;
+                    color: var(--aic-fg) !important;
+                }
+                .more-menu .btn::after {
+                    content: attr(aria-label);
+                    font-size: 14px;
+                    white-space: nowrap;
+                }
+                @keyframes aic-menu-in {
+                    from { opacity: 0; transform: translateY(4px); }
                 }
                 @media (prefers-reduced-motion: reduce) {
                     .talk.active { animation: none; }
                     .controls ha-icon { transition: none; }
+                    .btn.record ha-icon, .rec-dot { animation: none !important; }
+                    .more-menu.open, .status-bar .indicator { animation: none; }
+                    .status-bar { transition: none; }
                 }
                 .stats-overlay {
                     position: absolute;
@@ -1578,7 +2419,7 @@ class SpeakeasyCard extends VideoRTCExt {
                     <div class="primary">
                         <button type="button" class="talk" data-action="talk" hidden>
                             <ha-icon icon="mdi:microphone"></ha-icon>
-                            <span class="label"></span>
+                            <span class="label"><span data-state="idle"></span><span data-state="active"></span><span data-state="pending"></span></span>
                         </button>
                         <div class="segmented" role="radiogroup" data-i18n="quality" hidden></div>
                     </div>
@@ -1587,13 +2428,22 @@ class SpeakeasyCard extends VideoRTCExt {
                         <button type="button" class="btn volume" data-action="volume" data-i18n="volume" hidden><ha-icon icon="mdi:volume-high"></ha-icon></button>
                         <button type="button" class="btn reconnect" data-action="reconnect" data-i18n="reconnect"><ha-icon icon="mdi:refresh"></ha-icon></button>
                         <button type="button" class="btn screenshot" data-action="screenshot" data-i18n="screenshot"><ha-icon icon="mdi:camera-outline"></ha-icon></button>
+                        <button type="button" class="btn record" data-action="record" data-i18n="record" data-state="idle" hidden><ha-icon icon="mdi:record-circle-outline"></ha-icon></button>
                         <button type="button" class="btn info" data-action="info" data-i18n="info" aria-pressed="false"><ha-icon icon="mdi:information-outline"></ha-icon></button>
                         <button type="button" class="btn pictureinpicture" data-action="pip" data-i18n="pip"><ha-icon icon="mdi:picture-in-picture-bottom-right"></ha-icon></button>
                         <button type="button" class="btn fullscreen" data-action="fullscreen" data-i18n="fullscreen"><ha-icon icon="mdi:fullscreen"></ha-icon></button>
                         <button type="button" class="btn panel-toggle" data-i18n="cameraControls" aria-expanded="false" hidden><ha-icon icon="mdi:tune-variant"></ha-icon></button>
+                        <button type="button" class="btn more" data-i18n="more" aria-controls="more-menu" aria-expanded="false" hidden><ha-icon icon="mdi:dots-horizontal"></ha-icon></button>
                     </div>
+                    <div class="more-menu" id="more-menu" popover="manual"></div>
                 </div>
             </div>
+        `);
+        // the status tray is not part of the card: it slides out from under its bottom edge
+        card.insertAdjacentHTML('afterend', `
+            <div class="status-bar"><div class="status-bar-inner"><div class="status-bar-body">
+                <div class="indicator rec-badge" role="timer" hidden><span class="rec-dot"></span><span class="rec-time"></span></div>
+            </div></div></div>
         `);
         this.querySelector('.stats-overlay').innerText = this.t('noData');
         this.applyLabels();
@@ -1645,8 +2495,20 @@ class SpeakeasyCard extends VideoRTCExt {
         }
 
         this.querySelector('.ui').addEventListener('click', ev => {
+            if (ev.target.closest('.more')) {
+                this.toggleMoreMenu();
+                return;
+            }
             const button = ev.target.closest('[data-action]');
             if (!button) return;
+            if (button.closest('.more-menu')) {
+                // a manual popover does not restore focus: hiding the item would drop it to <body>.
+                // Only when the item had it (keyboard, or a click outside Safari); an action that
+                // moves focus itself still wins.
+                const refocus = button === this.shadowRoot.activeElement;
+                this.closeMoreMenu();
+                if (refocus) this.querySelector('.tools .more').focus();
+            }
             switch (button.dataset.action) {
                 case 'play':
                     if (video.paused) this.play();
@@ -1671,6 +2533,9 @@ class SpeakeasyCard extends VideoRTCExt {
                     break;
                 case 'screenshot':
                     this.saveScreenshot();
+                    break;
+                case 'record':
+                    this.toggleRecording();
                     break;
                 case 'info':
                     this.toggleStats();
@@ -1707,6 +2572,7 @@ class SpeakeasyCard extends VideoRTCExt {
 
         this.updateStreamSwitcher();
         this.updateTalkButton();
+        this.observeControls();
         this.startStats();
     }
 
@@ -1737,10 +2603,172 @@ class SpeakeasyCard extends VideoRTCExt {
         const primary = this.querySelector('.primary');
         if (!primary) return;
         primary.hidden = !Array.from(primary.children).some(el => !el.hidden);
+    }
+
+    /**
+     * Fit the control bar to its width, whatever it holds: one row if everything fits, else talk +
+     * quality on a row of their own, and the least needed tools behind "more" if even a full row of
+     * tools does not fit. Runs on resize and whenever a control appears, disappears or changes.
+     */
+    layoutControls() {
         const controls = this.querySelector('.controls');
-        const talk = primary.querySelector('.talk'); // absent when it lives in the camera panel
-        controls.classList.toggle('has-talk', !!talk && !talk.hidden);
-        controls.classList.toggle('has-streams', !this.querySelector('.segmented').hidden);
+        if (!controls || !controls.clientWidth) return; // not rendered yet, or in a hidden tab
+        const style = getComputedStyle(controls);
+        const width = controls.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+        const primary = controls.querySelector('.primary');
+        const tools = controls.querySelector('.tools');
+        const more = tools.querySelector('.more');
+        const menu = controls.querySelector('.more-menu');
+
+        // natural width of talk + quality, read in the one-row layout where nothing is stretched
+        controls.classList.remove('compact');
+        const shown = primary.hidden ? [] : Array.from(primary.children).filter(el => !el.hidden);
+        // the rect is exact but includes transforms (talk shrinks while pressed, and a press relabels
+        // it, which lands here); offsetWidth ignores them, rounded to whole pixels
+        const primaryWidth = shown.reduce((sum, el) => sum + Math.max(el.offsetWidth, el.getBoundingClientRect().width), 0)
+            + BAR.primaryGap * Math.max(shown.length - 1, 0);
+
+        // every tool is a BAR.button-wide icon button (record included: its timer lives in the status tray)
+        const buttons = this._toolButtons.filter(button => !button.hidden);
+        const row = count => count * BAR.button + Math.max(count - 1, 0) * BAR.toolGap;
+        const oneRow = !primaryWidth || primaryWidth + BAR.groupGap + row(buttons.length) <= width;
+        controls.classList.toggle('compact', !oneRow);
+
+        // tools row too narrow: hand the least needed tools to "more", which takes a slot itself
+        const overflow = new Set();
+        if (row(buttons.length) > width) {
+            const candidates = OVERFLOW_ORDER
+                .map(action => buttons.find(button => button.dataset.action === action))
+                .filter(Boolean);
+            while (candidates.length && row(buttons.length - overflow.size + 1) > width) overflow.add(candidates.shift());
+        }
+
+        const key = this._toolButtons.map(button => (overflow.has(button) ? 1 : 0)).join('');
+        if (key !== this._overflowKey) {
+            this._overflowKey = key;
+            const focused = this.shadowRoot.activeElement;
+            this.closeMoreMenu();
+            for (const button of this._toolButtons) {
+                if (overflow.has(button)) menu.appendChild(button);
+                else tools.insertBefore(button, more);
+            }
+            more.hidden = !overflow.size;
+            // a moved or hidden node loses focus: give it back, or to "more" if it went into the closed menu
+            if (focused && focused !== this.shadowRoot.activeElement) {
+                // preventScroll: a resize while the card is off-screen must not pull the page back to it
+                if (tools.contains(focused)) focused.focus({preventScroll: true});
+                else if (menu.contains(focused) && !more.hidden) more.focus({preventScroll: true});
+            }
+        }
+        // our own moves are not changes to react to
+        this._barMutations.takeRecords();
+    }
+
+    /** The status bar slides out while it has something to show and folds away when it is empty. */
+    updateStatusBar() {
+        const bar = this.querySelector('.status-bar');
+        if (!bar) return;
+        const shown = Array.from(bar.querySelectorAll('.indicator')).filter(badge => !badge.hidden);
+        // The tray takes the colour of what matters most: a recording, else the first event. Set
+        // before it opens and kept when it folds, so the colour neither fades in from a stale tint
+        // while it slides out nor flashes while it slides back.
+        const lead = shown.find(badge => badge.classList.contains('rec-badge')) || shown[0];
+        // '' (a badge without a colour) clears it, so the CSS fallback applies
+        if (lead) bar.style.setProperty('--aic-tray', getComputedStyle(lead).getPropertyValue('--aic-indicator').trim());
+        // apply the tint while folded (no background transition) before the tray opens
+        if (lead && !bar.classList.contains('open')) getComputedStyle(bar).backgroundColor;
+        bar.classList.toggle('open', shown.length > 0);
+    }
+
+    /** Re-run layoutControls on resize and whenever the content of the bar changes. */
+    observeControls() {
+        const controls = this.querySelector('.controls');
+        this._toolButtons = Array.from(controls.querySelectorAll('.tools .btn:not(.more)'));
+        let lastWidth = -1;
+        new ResizeObserver(() => {
+            if (controls.clientWidth === lastWidth) return; // a height change from our own reflow
+            lastWidth = controls.clientWidth;
+            this.layoutControls();
+        }).observe(controls);
+        this._barMutations = new MutationObserver(() => this.layoutControls());
+        this._barMutations.observe(controls, {subtree: true, childList: true, attributes: true, attributeFilter: ['hidden']});
+        // labels are measured in the web font; it may arrive after the first layout
+        if (document.fonts) document.fonts.ready.then(() => this.layoutControls());
+    }
+
+    toggleMoreMenu() {
+        const menu = this.querySelector('.more-menu');
+        if (menu.classList.contains('open')) {
+            this.closeMoreMenu();
+            return;
+        }
+        const more = this.querySelector('.tools .more');
+        menu.classList.add('open');
+        // The top layer escapes the card's clipping. Old browsers lay it out inside the bar
+        // (container-type makes .ui its containing block), where the card clips it.
+        const popover = typeof menu.showPopover === 'function';
+        if (popover) menu.showPopover();
+        more.classList.add('on');
+        more.setAttribute('aria-expanded', 'true');
+
+        // anchor to "more": right edges aligned, above it if it fits, else on the side with more room
+        const gap = 6; // px between "more" and its menu
+        const base = popover
+            ? {top: 0, right: document.documentElement.clientWidth, bottom: window.innerHeight}
+            : this.querySelector('.ui').getBoundingClientRect();
+        const anchor = more.getBoundingClientRect();
+        let above;
+        if (popover) {
+            const height = menu.offsetHeight;
+            above = anchor.top - height - gap >= 0 || anchor.top > window.innerHeight - anchor.bottom;
+        } else {
+            // inside the card there is no room below the bar, so it opens up and scrolls if taller
+            above = true;
+            const cardTop = this.querySelector('.card').getBoundingClientRect().top;
+            const style = getComputedStyle(menu); // max-height excludes the padding
+            const padding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+            menu.style.maxHeight = Math.max(anchor.top - cardTop - 2 * gap - padding, 40) + 'px';
+        }
+        menu.style.right = Math.max(base.right - anchor.right, 0) + 'px';
+        menu.style.bottom = above ? base.bottom - anchor.top + gap + 'px' : 'auto';
+        menu.style.top = above ? 'auto' : anchor.bottom - base.top + gap + 'px';
+
+        const close = () => this.closeMoreMenu();
+        // Tab out of the menu closes it. A null relatedTarget (window switch, a click Safari does
+        // not focus) is left to the outside pointerdown.
+        const blur = ev => {
+            const to = ev.relatedTarget;
+            if (to && !menu.contains(to) && to !== more) close();
+        };
+        const outside = ev => {
+            const path = ev.composedPath();
+            if (!path.includes(menu) && !path.includes(more)) close();
+        };
+        const escape = ev => {
+            if (ev.key !== 'Escape') return;
+            close();
+            more.focus();
+        };
+        // removed together by closeMoreMenu()
+        this._moreMenuListeners = new AbortController();
+        const {signal} = this._moreMenuListeners;
+        document.addEventListener('pointerdown', outside, {capture: true, signal});
+        document.addEventListener('keydown', escape, {capture: true, signal});
+        window.addEventListener('scroll', close, {capture: true, signal});
+        window.addEventListener('resize', close, {signal});
+        menu.addEventListener('focusout', blur, {signal});
+        more.addEventListener('focusout', blur, {signal});
+    }
+
+    closeMoreMenu() {
+        const menu = this.querySelector('.more-menu');
+        if (!menu || !menu.classList.contains('open')) return;
+        menu.classList.remove('open');
+        if (typeof menu.hidePopover === 'function' && menu.matches(':popover-open')) menu.hidePopover();
+        const more = this.querySelector('.tools .more');
+        more.classList.remove('on');
+        more.setAttribute('aria-expanded', 'false');
+        this._moreMenuListeners.abort();
     }
 
     /** @param state {'idle'|'active'|'pending'} */
@@ -1750,8 +2778,11 @@ class SpeakeasyCard extends VideoRTCExt {
         talk.classList.toggle('active', state === 'active');
         talk.classList.toggle('pending', state === 'pending');
         talk.querySelector('ha-icon').icon = state === 'active' ? 'mdi:ear-hearing' : 'mdi:microphone';
-        talk.querySelector('.label').innerText =
-            this.t(state === 'active' ? 'listen' : state === 'pending' ? 'connecting' : 'talk');
+        const keys = {idle: 'talk', active: 'listen', pending: 'connecting'};
+        talk.querySelectorAll('.label > span').forEach(label => {
+            label.textContent = this.t(keys[label.dataset.state]);
+            label.classList.toggle('current', label.dataset.state === state);
+        });
     }
 
     onmicchange(active) {

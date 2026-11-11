@@ -122,8 +122,23 @@ function fakeHass(scene) {
         language: 'en',
         locale: {language: 'en'},
         themes: {darkMode: scene.theme === 'dark'},
+        // `recording` (seconds ago) stands in for the Speakeasy integration; without it there is none
+        config: {components: scene.recording === undefined ? [] : ['speakeasy']},
         callService: async () => {},
-        callWS: () => new Promise(() => {}),
+        callWS: msg => {
+            if (msg.type !== 'speakeasy/info') return new Promise(() => {});
+            return Promise.resolve({version: '0.1.0', protocol: 1, features: ['record'], configured: true});
+        },
+        connection: {
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            subscribeMessage: async callback => {
+                const source = scene.config.entity ? {entity: scene.config.entity} : {url: scene.config.streams[0].url};
+                const started_at = new Date(Date.now() - scene.recording * 1000).toISOString();
+                callback({event: 'list', configured: true, recordings: [{id: 'demo', name: 'demo', source, started_at, status: 'recording', reason: null}]});
+                return () => {};
+            },
+        },
         hassUrl: path => location.origin + path,
     };
 }

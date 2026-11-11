@@ -31,6 +31,8 @@ python3 scripts/vendor.py update video-rtc.js <commit>
 python3 scripts/build.py
 ```
 
+Recording goes through the Speakeasy integration; the WebSocket commands and events it offers the card are in its [CONTRIBUTING.md](https://github.com/petrouv/ha-speakeasy/blob/main/CONTRIBUTING.md#card-protocol).
+
 Some of the changes in `src/video-rtc-ext.js` are proposed upstream in go2rtc: [#2665](https://github.com/AlexxIT/go2rtc/pull/2665), [#2666](https://github.com/AlexxIT/go2rtc/pull/2666), [#2667](https://github.com/AlexxIT/go2rtc/pull/2667), [#2668](https://github.com/AlexxIT/go2rtc/issues/2668), [#2669](https://github.com/AlexxIT/go2rtc/issues/2669). Once a change is merged and `vendor/video-rtc.js` is updated, the matching override is deleted.
 
 ## Screenshots

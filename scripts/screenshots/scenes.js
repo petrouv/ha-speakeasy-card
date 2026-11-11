@@ -45,6 +45,7 @@ export const SCENES = {
         frame: 'frames/cat-ir.png',           // 1536x1024
         crop: [0, 80, 1536, 864],             // 16:9
         audio: true,
+        recording: 83,                        // seconds since a recording started; omit for no integration
         talk: null,
         panel: true,
         config: {
