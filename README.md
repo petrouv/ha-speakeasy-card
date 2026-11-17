@@ -35,7 +35,7 @@ A doorbell, intercom and camera card for Home Assistant: live WebRTC video, push
 
 [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=petrouv&repository=ha-speakeasy-card&category=plugin)
 
-Install "Speakeasy — Doorbell, Intercom & Camera Card" and reload the page. Without the button: HACS → ⋮ → Custom repositories → `https://github.com/petrouv/ha-speakeasy-card`, type "Dashboard".
+Install "Speakeasy — Doorbell, Intercom & Camera Card" and reload the page. Without the button: search HACS for "Speakeasy — Doorbell, Intercom & Camera Card".
 
 **Manual.** Copy `speakeasy-card.js` to `<config>/www/` and add a dashboard resource (Settings → Dashboards → Resources):
 
