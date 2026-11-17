@@ -7,7 +7,7 @@
 import {VideoRTCExt} from './video-rtc-ext.js';
 import {DigitalPTZ} from '../vendor/digital-ptz.js';
 
-const VERSION = '0.2.0';
+const VERSION = '0.2.1';
 
 /**
  * UI strings. English is the fallback; the language follows the Home Assistant
@@ -70,6 +70,7 @@ const STRINGS = {
         recordCameraAsleep: 'Recording failed: the camera did not answer. It may be asleep or offline; try again',
         recordStartStopped: 'Recording not started: it was stopped, or Home Assistant was stopping, before the camera sent data',
         recordNoMediaDir: 'Recording is unavailable: Home Assistant has no local media folder',
+        recordWrongServer: 'Recording is unavailable: this card\'s server is not the go2rtc address set in the Speakeasy integration',
         recordFolderNotWritable: 'Recording failed: cannot write to the recordings folder. ',
         recordEnded_disk_low: 'Recording stopped: not enough free disk space',
         recordEnded_stalled: 'Recording stopped: the camera stopped sending data',
@@ -135,6 +136,7 @@ const STRINGS = {
         recordCameraAsleep: 'Не удалось записать: камера не ответила. Возможно, она спит или недоступна; попробуйте ещё раз',
         recordStartStopped: 'Запись не начата: её остановили или Home Assistant останавливался до того, как камера прислала данные',
         recordNoMediaDir: 'Запись недоступна: в Home Assistant нет локальной папки «Медиа»',
+        recordWrongServer: 'Запись недоступна: server этой карточки не совпадает с адресом go2rtc в настройках интеграции Speakeasy',
         recordFolderNotWritable: 'Не удалось записать: нет доступа на запись в папку записей. ',
         recordEnded_disk_low: 'Запись остановлена: мало свободного места на диске',
         recordEnded_stalled: 'Запись остановлена: камера перестала присылать данные',
@@ -499,9 +501,10 @@ class SpeakeasyCard extends VideoRTCExt {
     }
 
     set hass(hass) {
-        const lang = this.lang;
+        // The UI language, not just `lang`: labels follow it even when the card's strings stay `en`.
+        const lang = this.uiLang;
         this._hass = hass;
-        if (this.lang !== lang) this.applyLabels();
+        if (this.uiLang !== lang) this.applyLabels();
         this.updateCameraBar();
         this.updateIndicators();
         this.initRecording(true);
@@ -532,11 +535,16 @@ class SpeakeasyCard extends VideoRTCExt {
         }, this.DISCONNECT_TIMEOUT);
     }
 
-    /** UI language code with a STRINGS entry, 'en' otherwise. */
-    get lang() {
+    /** Home Assistant UI language code (`de` for `de-CH`), whether or not the card is translated into it. */
+    get uiLang() {
         const hass = this._hass;
         const code = (hass && ((hass.locale && hass.locale.language) || hass.language)) || navigator.language || 'en';
-        const lang = String(code).toLowerCase().split('-')[0];
+        return String(code).toLowerCase().split('-')[0];
+    }
+
+    /** UI language code with a STRINGS entry, 'en' otherwise. */
+    get lang() {
+        const lang = this.uiLang;
         return STRINGS[lang] ? lang : 'en';
     }
 
@@ -551,12 +559,14 @@ class SpeakeasyCard extends VideoRTCExt {
 
     /**
      * A config text that may be localized: a string, or {en: '…', ru: '…'}.
+     * The UI language comes first even if the card's own strings are not translated into it:
+     * a user's labels may cover languages the card does not.
      * @param {string|Object<string,string>} value
      * @return {string}
      */
     loc(value) {
         if (!value || typeof value !== 'object') return value === undefined || value === null ? '' : String(value);
-        return value[this.lang] || value.en || Object.values(value)[0] || '';
+        return value[this.uiLang] || value[this.lang] || value.en || Object.values(value)[0] || '';
     }
 
     /** Where the talk button lives: 'bar', 'panel' or false (no microphone in `media` hides it anyway). */
@@ -1570,7 +1580,7 @@ class SpeakeasyCard extends VideoRTCExt {
         if (!select) return;
         const state = states[this.config.preset];
         const options = (state && state.attributes.options) || [];
-        const key = this.lang + '\n' + options.join('\n');
+        const key = this.uiLang + '\n' + options.join('\n');
         if (key === this._presetOptions) return;
         this._presetOptions = key;
         const placeholder = this.t(options.length ? 'preset' : 'noPresets');
@@ -1966,6 +1976,9 @@ class SpeakeasyCard extends VideoRTCExt {
         // for go2rtc's first data. Also a start asked while HA was stopping.
         if (code === 'stopped') return this.t('recordStartStopped');
         if (code === 'media_dir_missing') return this.t('recordNoMediaDir');
+        // The card always sends a valid source, so with a `server` set this is the integration
+        // (0.1.1+) refusing a go2rtc other than its own; without one, fall through to the raw text.
+        if (code === 'invalid_source' && this.config.server) return this.t('recordWrongServer');
         // without a detail the integration sends the code itself as the message
         const detail = err && err.message && err.message !== code ? err.message : '';
         if (code === 'stream_not_found' || code === 'go2rtc_error') return this.t('recordNoStream') + detail;
